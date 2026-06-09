@@ -25,7 +25,7 @@ const setStatus = (text) => {
 };
 
 document.getElementById('playPauseBtn').addEventListener('playblocked', () => {
-  setStatus('הדפדפן חוסם השמעת שמע. לחץ על נגן כדי להתחיל.');
+  setStatus('הדפדפן חוסם השמעת שמע. לחץ על הנגן כדי להתחיל.');
 });
 
 const bootstrap = async () => {

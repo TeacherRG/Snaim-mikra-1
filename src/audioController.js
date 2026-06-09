@@ -34,6 +34,7 @@ export const createAudioController = ({
 
   const handlePlayError = (err) => {
     if (err?.name === 'NotAllowedError') {
+      // Browser autoplay policy blocked playback; notify the UI.
       playPauseBtn.dispatchEvent(new CustomEvent('playblocked'));
     } else {
       throw err;
