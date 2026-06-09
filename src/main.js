@@ -69,7 +69,7 @@ const bootstrap = async () => {
       ? Math.max(0, APP_CONFIG.highlightStartDelaySec)
       : 0;
     const highlightOffsetSec = Number.isFinite(APP_CONFIG.highlightOffsetSec) ? APP_CONFIG.highlightOffsetSec : 0;
-    const maxCorrectionSec = durationSec;
+    const maxCorrectionSec = Math.min(durationSec, 10);
     let highlightCorrectionSec = 0;
 
     audio.addEventListener('ended', () => {
