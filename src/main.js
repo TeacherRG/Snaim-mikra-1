@@ -72,10 +72,10 @@ const bootstrap = async () => {
     const maxCorrectionSec = Math.min(durationSec, 10);
     let highlightCorrectionSec = 0;
 
-    audio.addEventListener('ended', () => {
+    audio.onended = () => {
       highlightCorrectionSec = 0;
       setActiveWord(null);
-    });
+    };
 
     controller.onTimeUpdate((timeSec) => {
       if (timeSec < highlightStartDelaySec) {
