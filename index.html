@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>שניים מקרא ואחד תרגום — שלח</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;700&family=Noto+Sans+Hebrew:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="app">
+      <header class="header">
+        <h1>שניים מקרא ואחד תרגום</h1>
+        <p>פרשת שלח</p>
+      </header>
+
+      <section class="player" aria-label="נגן שמע">
+        <button id="playPauseBtn" class="button" type="button">נגן</button>
+
+        <label class="timeline-label" for="timeline">
+          <span id="currentTime">00:00</span>
+          <input id="timeline" type="range" min="0" max="100" value="0" step="0.01" />
+          <span id="totalTime">00:00</span>
+        </label>
+
+        <label class="speed-label" for="speedSelect">מהירות</label>
+        <select id="speedSelect" class="select"></select>
+
+        <audio id="audio" preload="metadata"></audio>
+      </section>
+
+      <section id="status" class="status" aria-live="polite">טוען טקסט…</section>
+      <section id="textContainer" class="text-container" aria-label="טקסט הקריאה"></section>
+    </main>
+
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
