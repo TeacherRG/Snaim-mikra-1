@@ -1,4 +1,5 @@
 const cleanText = (text) => text.replace(/\s+/g, ' ').trim();
+const WIKISOURCE_VERSE_ROW_SELECTOR = 'div[lang="hbo"] table.notheme tr[valign="top"]';
 
 const extractPrimarySpanText = (lineEl) => {
   const spans = Array.from(lineEl.querySelectorAll(':scope > span'))
@@ -78,6 +79,8 @@ const parseWikisourceVerseRow = (row, index) => {
   }
 
   const hebrew1 = hebrewLines[0];
+  // Приложение всегда ожидает два прохода микры; если в источнике сохранена одна строка,
+  // используем её для обоих проходов.
   const hebrew2 = hebrewLines.length > 1 ? hebrewLines[1] : hebrew1;
 
   return {
@@ -97,7 +100,7 @@ const parseSavedAppVerses = (doc) => {
 };
 
 const parseWikisourceVerses = (doc) => {
-  const verseRows = Array.from(doc.querySelectorAll('div[lang="hbo"] table.notheme tr[valign="top"]'));
+  const verseRows = Array.from(doc.querySelectorAll(WIKISOURCE_VERSE_ROW_SELECTOR));
 
   return verseRows
     .map((row, index) => parseWikisourceVerseRow(row, index))
