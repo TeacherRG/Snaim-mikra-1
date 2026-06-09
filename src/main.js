@@ -46,10 +46,19 @@ const bootstrap = async () => {
       durationSec,
       manualWordTimings: APP_CONFIG.manualWordTimings,
     });
+    const highlightStartDelaySec = Number.isFinite(APP_CONFIG.highlightStartDelaySec)
+      ? Math.max(0, APP_CONFIG.highlightStartDelaySec)
+      : 0;
     const highlightOffsetSec = Number.isFinite(APP_CONFIG.highlightOffsetSec) ? APP_CONFIG.highlightOffsetSec : 0;
 
     controller.onTimeUpdate((timeSec) => {
-      const active = timingProvider.getByTime(Math.max(0, timeSec + highlightOffsetSec));
+      if (timeSec < highlightStartDelaySec) {
+        setActiveWord(null);
+        return;
+      }
+
+      const playbackTimeSec = Math.max(0, timeSec - highlightStartDelaySec);
+      const active = timingProvider.getByTime(Math.max(0, playbackTimeSec + highlightOffsetSec));
       if (!active) return;
 
       setActiveWord(active.index);
@@ -65,7 +74,7 @@ const bootstrap = async () => {
         const timing = timingProvider.getByIndex(index);
         if (!timing) return;
 
-        await controller.seekAndPlay(Math.max(0, timing.start - highlightOffsetSec));
+        await controller.seekAndPlay(Math.max(0, timing.start + highlightStartDelaySec - highlightOffsetSec));
         setActiveWord(index);
       });
     });
