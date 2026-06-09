@@ -12,7 +12,7 @@ const extractPrimarySpanText = (lineEl) => {
   return spans.reduce((longest, current) => (current.length > longest.length ? current : longest), '');
 };
 
-const getUniqueTexts = (texts) => texts.filter((text, index) => text && texts.indexOf(text) === index);
+const getUniqueTexts = (texts) => Array.from(new Set(texts.filter(Boolean)));
 
 const extractHtmlFromMhtml = (raw) => {
   const htmlStart = raw.indexOf('<!DOCTYPE html>');
@@ -77,7 +77,8 @@ const parseWikisourceVerseRow = (row, index) => {
     return null;
   }
 
-  const [hebrew1, hebrew2 = hebrewLines[0]] = hebrewLines;
+  const hebrew1 = hebrewLines[0];
+  const hebrew2 = hebrewLines.length > 1 ? hebrewLines[1] : hebrew1;
 
   return {
     id: index + 1,
