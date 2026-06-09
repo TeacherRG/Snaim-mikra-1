@@ -69,7 +69,13 @@ const bootstrap = async () => {
       ? Math.max(0, APP_CONFIG.highlightStartDelaySec)
       : 0;
     const highlightOffsetSec = Number.isFinite(APP_CONFIG.highlightOffsetSec) ? APP_CONFIG.highlightOffsetSec : 0;
+    const maxCorrectionSec = durationSec;
     let highlightCorrectionSec = 0;
+
+    audio.addEventListener('ended', () => {
+      highlightCorrectionSec = 0;
+      setActiveWord(null);
+    });
 
     controller.onTimeUpdate((timeSec) => {
       if (timeSec < highlightStartDelaySec) {
@@ -116,7 +122,7 @@ const bootstrap = async () => {
             highlightStartDelaySec,
             highlightOffsetSec,
           );
-          highlightCorrectionSec = timing.start - currentLookupTime;
+          highlightCorrectionSec = clamp(timing.start - currentLookupTime, -maxCorrectionSec, maxCorrectionSec);
         }
         setActiveWord(index);
       });
