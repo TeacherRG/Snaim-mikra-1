@@ -24,6 +24,23 @@ const setStatus = (text) => {
   statusEl.textContent = text;
 };
 
+/**
+ * Converts the current playback position into the timing lookup position.
+ * highlightStartDelaySec shifts the spoken content later in the file,
+ * while highlightOffsetSec keeps the highlight slightly ahead of the spoken audio.
+ */
+const getTimingLookupTime = (timeSec, highlightStartDelaySec, highlightOffsetSec) => (
+  Math.max(0, timeSec - highlightStartDelaySec + highlightOffsetSec)
+);
+
+/**
+ * Converts a word timing back into the matching playback position in the audio file.
+ * The initial audio delay is added back, and the highlight lead is subtracted.
+ */
+const getPlaybackTimeFromTiming = (wordStartSec, highlightStartDelaySec, highlightOffsetSec) => (
+  Math.max(0, wordStartSec + highlightStartDelaySec - highlightOffsetSec)
+);
+
 document.getElementById('playPauseBtn').addEventListener('playblocked', () => {
   setStatus('הדפדפן חוסם השמעת שמע. לחץ על הנגן כדי להתחיל.');
 });
@@ -46,10 +63,23 @@ const bootstrap = async () => {
       durationSec,
       manualWordTimings: APP_CONFIG.manualWordTimings,
     });
+    const highlightStartDelaySec = Number.isFinite(APP_CONFIG.highlightStartDelaySec)
+      ? Math.max(0, APP_CONFIG.highlightStartDelaySec)
+      : 0;
     const highlightOffsetSec = Number.isFinite(APP_CONFIG.highlightOffsetSec) ? APP_CONFIG.highlightOffsetSec : 0;
 
     controller.onTimeUpdate((timeSec) => {
-      const active = timingProvider.getByTime(Math.max(0, timeSec + highlightOffsetSec));
+      if (timeSec < highlightStartDelaySec) {
+        setActiveWord(null);
+        return;
+      }
+
+      const lookupTimeSec = getTimingLookupTime(
+        timeSec,
+        highlightStartDelaySec,
+        highlightOffsetSec,
+      );
+      const active = timingProvider.getByTime(lookupTimeSec);
       if (!active) return;
 
       setActiveWord(active.index);
@@ -65,7 +95,11 @@ const bootstrap = async () => {
         const timing = timingProvider.getByIndex(index);
         if (!timing) return;
 
-        await controller.seekAndPlay(Math.max(0, timing.start - highlightOffsetSec));
+        await controller.seekAndPlay(getPlaybackTimeFromTiming(
+          timing.start,
+          highlightStartDelaySec,
+          highlightOffsetSec,
+        ));
         setActiveWord(index);
       });
     });
