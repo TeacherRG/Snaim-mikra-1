@@ -18,7 +18,7 @@
 - аудио: `./Record-6.mp3`
 
 Если хотите подключить другие локальные файлы, измените пути в:
-`/home/runner/work/Snaim-mikra-1/Snaim-mikra-1/TeacherRG/Snaim-mikra-1/src/config.js`
+`src/config.js`
 
 ```js
 textSource: './ваш_файл_текста',
@@ -40,7 +40,7 @@ manualWordTimings: [
 Запустите локальный HTTP-сервер из корня репозитория (важно: не открывать `index.html` через `file://`):
 
 ```bash
-cd /home/runner/work/Snaim-mikra-1/Snaim-mikra-1/TeacherRG/Snaim-mikra-1
+cd <путь_к_репозиторию>
 python3 -m http.server 8000
 ```
 
