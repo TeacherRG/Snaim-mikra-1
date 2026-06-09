@@ -1,5 +1,17 @@
 const cleanText = (text) => text.replace(/\s+/g, ' ').trim();
 
+const extractPrimarySpanText = (lineEl) => {
+  const spans = Array.from(lineEl.querySelectorAll(':scope > span'))
+    .map((span) => cleanText(span.textContent ?? ''))
+    .filter(Boolean);
+
+  if (!spans.length) {
+    return '';
+  }
+
+  return spans.reduce((longest, current) => (current.length > longest.length ? current : longest), '');
+};
+
 const extractHtmlFromMhtml = (raw) => {
   const htmlStart = raw.indexOf('<!DOCTYPE html>');
   const htmlEnd = raw.lastIndexOf('</html>');
@@ -18,7 +30,7 @@ const parseVerseContainer = (container, index) => {
     return null;
   }
 
-  const hebrew1Raw = cleanText(lineCandidates[0]?.textContent ?? '');
+  const hebrew1Raw = extractPrimarySpanText(lineCandidates[0]) || cleanText(lineCandidates[0]?.textContent ?? '');
   const hebrew2Raw = cleanText(lineCandidates[1]?.textContent ?? '');
   const targumRaw = cleanText(lineCandidates[2]?.textContent ?? '');
 
