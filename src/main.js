@@ -33,6 +33,8 @@ const getTimingLookupTime = (timeSec, highlightStartDelaySec, highlightOffsetSec
   Math.max(0, timeSec - highlightStartDelaySec + highlightOffsetSec)
 );
 
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
 /**
  * Converts a word timing back into the matching playback position in the audio file.
  * The initial audio delay is added back, and the highlight lead is subtracted.
@@ -67,6 +69,7 @@ const bootstrap = async () => {
       ? Math.max(0, APP_CONFIG.highlightStartDelaySec)
       : 0;
     const highlightOffsetSec = Number.isFinite(APP_CONFIG.highlightOffsetSec) ? APP_CONFIG.highlightOffsetSec : 0;
+    let highlightCorrectionSec = 0;
 
     controller.onTimeUpdate((timeSec) => {
       if (timeSec < highlightStartDelaySec) {
@@ -79,7 +82,12 @@ const bootstrap = async () => {
         highlightStartDelaySec,
         highlightOffsetSec,
       );
-      const active = timingProvider.getByTime(lookupTimeSec);
+      const correctedLookupTimeSec = clamp(
+        lookupTimeSec + highlightCorrectionSec,
+        0,
+        durationSec,
+      );
+      const active = timingProvider.getByTime(correctedLookupTimeSec);
       if (!active) return;
 
       setActiveWord(active.index);
@@ -95,11 +103,21 @@ const bootstrap = async () => {
         const timing = timingProvider.getByIndex(index);
         if (!timing) return;
 
-        await controller.seekAndPlay(getPlaybackTimeFromTiming(
-          timing.start,
-          highlightStartDelaySec,
-          highlightOffsetSec,
-        ));
+        if (audio.paused) {
+          highlightCorrectionSec = 0;
+          await controller.seekAndPlay(getPlaybackTimeFromTiming(
+            timing.start,
+            highlightStartDelaySec,
+            highlightOffsetSec,
+          ));
+        } else {
+          const currentLookupTime = getTimingLookupTime(
+            audio.currentTime,
+            highlightStartDelaySec,
+            highlightOffsetSec,
+          );
+          highlightCorrectionSec = timing.start - currentLookupTime;
+        }
         setActiveWord(index);
       });
     });
