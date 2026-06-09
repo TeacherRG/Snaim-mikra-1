@@ -32,9 +32,17 @@ export const createAudioController = ({
     audio.webkitPreservesPitch = true;
   }
 
+  const handlePlayError = (err) => {
+    if (err?.name === 'NotAllowedError') {
+      playPauseBtn.dispatchEvent(new CustomEvent('playblocked'));
+    } else {
+      throw err;
+    }
+  };
+
   playPauseBtn.addEventListener('click', async () => {
     if (audio.paused) {
-      await audio.play();
+      await audio.play().catch(handlePlayError);
     } else {
       audio.pause();
     }
@@ -73,7 +81,7 @@ export const createAudioController = ({
       audio.currentTime = Math.max(0, timeSec);
       timeline.value = String(audio.currentTime);
       if (audio.paused) {
-        await audio.play();
+        await audio.play().catch(handlePlayError);
       }
     },
     onTimeUpdate: (handler) => {
