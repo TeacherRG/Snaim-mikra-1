@@ -24,6 +24,14 @@ const setStatus = (text) => {
   statusEl.textContent = text;
 };
 
+const getWordTimingSec = (timeSec, highlightStartDelaySec, highlightOffsetSec) => (
+  Math.max(0, timeSec - highlightStartDelaySec + highlightOffsetSec)
+);
+
+const getSeekTimeSec = (wordStartSec, highlightStartDelaySec, highlightOffsetSec) => (
+  Math.max(0, wordStartSec + highlightStartDelaySec - highlightOffsetSec)
+);
+
 document.getElementById('playPauseBtn').addEventListener('playblocked', () => {
   setStatus('הדפדפן חוסם השמעת שמע. לחץ על הנגן כדי להתחיל.');
 });
@@ -57,8 +65,8 @@ const bootstrap = async () => {
         return;
       }
 
-      const playbackTimeSec = Math.max(0, timeSec - highlightStartDelaySec);
-      const active = timingProvider.getByTime(Math.max(0, playbackTimeSec + highlightOffsetSec));
+      const wordTimingSec = getWordTimingSec(timeSec, highlightStartDelaySec, highlightOffsetSec);
+      const active = timingProvider.getByTime(wordTimingSec);
       if (!active) return;
 
       setActiveWord(active.index);
@@ -74,7 +82,11 @@ const bootstrap = async () => {
         const timing = timingProvider.getByIndex(index);
         if (!timing) return;
 
-        await controller.seekAndPlay(Math.max(0, timing.start + highlightStartDelaySec - highlightOffsetSec));
+        await controller.seekAndPlay(getSeekTimeSec(
+          timing.start,
+          highlightStartDelaySec,
+          highlightOffsetSec,
+        ));
         setActiveWord(index);
       });
     });
