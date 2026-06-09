@@ -12,6 +12,8 @@ const extractPrimarySpanText = (lineEl) => {
   return spans.reduce((longest, current) => (current.length > longest.length ? current : longest), '');
 };
 
+const getUniqueTexts = (texts) => texts.filter((text, index) => text && texts.indexOf(text) === index);
+
 const extractHtmlFromMhtml = (raw) => {
   const htmlStart = raw.indexOf('<!DOCTYPE html>');
   const htmlEnd = raw.lastIndexOf('</html>');
@@ -49,6 +51,58 @@ const parseVerseContainer = (container, index) => {
   };
 };
 
+const extractWikisourceHebrewLines = (cell) => {
+  const wrapper = cell.querySelector(':scope > span') ?? cell;
+  const directTexts = Array.from(wrapper.childNodes)
+    .filter((node) => node.nodeType === Node.TEXT_NODE)
+    .map((node) => cleanText(node.textContent ?? ''));
+  const paragraphTexts = Array.from(wrapper.querySelectorAll(':scope > p'))
+    .map((paragraph) => cleanText(paragraph.textContent ?? ''));
+
+  return getUniqueTexts([...directTexts, ...paragraphTexts]);
+};
+
+const parseWikisourceVerseRow = (row, index) => {
+  const hebrewCell = row.querySelector('td[align="left"]');
+  const targumCell = row.querySelector('td[align="right"]');
+
+  if (!hebrewCell || !targumCell) {
+    return null;
+  }
+
+  const hebrewLines = extractWikisourceHebrewLines(hebrewCell);
+  const targum = cleanText(targumCell.textContent ?? '');
+
+  if (!hebrewLines.length || !targum) {
+    return null;
+  }
+
+  const [hebrew1, hebrew2 = hebrewLines[0]] = hebrewLines;
+
+  return {
+    id: index + 1,
+    hebrew1,
+    hebrew2,
+    targum,
+  };
+};
+
+const parseSavedAppVerses = (doc) => {
+  const verseContainers = Array.from(doc.querySelectorAll('div.mb-6'));
+
+  return verseContainers
+    .map((container, index) => parseVerseContainer(container, index))
+    .filter(Boolean);
+};
+
+const parseWikisourceVerses = (doc) => {
+  const verseRows = Array.from(doc.querySelectorAll('div[lang="hbo"] table.notheme tr[valign="top"]'));
+
+  return verseRows
+    .map((row, index) => parseWikisourceVerseRow(row, index))
+    .filter(Boolean);
+};
+
 export const loadAndParseText = async (sourcePath) => {
   const response = await fetch(sourcePath);
   if (!response.ok) {
@@ -58,16 +112,17 @@ export const loadAndParseText = async (sourcePath) => {
   const raw = await response.text();
   const html = extractHtmlFromMhtml(raw);
   const doc = new DOMParser().parseFromString(html, 'text/html');
+  const verses = parseSavedAppVerses(doc);
 
-  // В сохранённой странице каждый стих находится в блоке с классом mb-6.
-  const verseContainers = Array.from(doc.querySelectorAll('div.mb-6'));
-  const verses = verseContainers
-    .map((container, index) => parseVerseContainer(container, index))
-    .filter(Boolean);
-
-  if (!verses.length) {
-    throw new Error('Не удалось извлечь стихи из файла главы.');
+  if (verses.length) {
+    return verses;
   }
 
-  return verses;
+  const wikisourceVerses = parseWikisourceVerses(doc);
+
+  if (wikisourceVerses.length) {
+    return wikisourceVerses;
+  }
+
+  throw new Error('Не удалось извлечь стихи из файла главы.');
 };
